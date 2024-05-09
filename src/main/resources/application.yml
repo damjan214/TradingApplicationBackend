@@ -1,0 +1,26 @@
+spring:
+  jpa:
+    database: mysql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/trading-application-db
+    username: root
+    password: Damian123456789
+
+allowedOrigins: "http://localhost:3000"
+
+token:
+  signing:
+    key: f23dcfbb7c50130f12adb2c68a5fef5b4f439c75068e3ff9eb7f1787d8e8797c
+  expiration:
+    minutes: 60
+
+stripe:
+  secret:
+    key: sk_test_51Ovm4nRxqXAWUg9uT6xBIqwuaECadk5i8cZi197ijNvql7MpyoI1ICVmcelEuTpZaQwQZ2PEOQlstYI7W4JbMaT000chRR90zP
+  success:
+    url: http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}
+  cancel:
+    url: http://localhost:3000/menu
