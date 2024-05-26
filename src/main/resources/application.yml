@@ -15,7 +15,7 @@ token:
   signing:
     key: f23dcfbb7c50130f12adb2c68a5fef5b4f439c75068e3ff9eb7f1787d8e8797c
   expiration:
-    minutes: 60
+    minutes: 120
 
 stripe:
   secret:
@@ -23,4 +23,13 @@ stripe:
   success:
     url: http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}
   cancel:
-    url: http://localhost:3000/menu
+    url: http://localhost:3000/stocks
+
+finnhub:
+  api:
+    key: cns89bpr01qmmmfktmegcns89bpr01qmmmfktmf0
+
+alphavantage:
+  api:
+    key: JJ6LN4Z930O8A6JG
+

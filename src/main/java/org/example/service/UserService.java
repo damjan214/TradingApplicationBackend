@@ -14,11 +14,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserRepository userRepository;
-
     private final AuthenticationService authenticationService;
-
     private final PasswordEncoder passwordEncoder;
 
     public UserDto updateUser(String token, UserDto userDto) {

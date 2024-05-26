@@ -23,7 +23,8 @@ public class AvatarController {
     @PostMapping("/avatar/save")
     public ResponseEntity<AvatarResponse> saveAvatar(@RequestParam("file") MultipartFile multipartFile, @RequestHeader("Authorization") String token) {
         try{
-            return ResponseEntity.ok(avatarService.saveAvatar(multipartFile, token));
+            User user = authenticationService.getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+            return ResponseEntity.ok(avatarService.saveAvatar(multipartFile, user));
         } catch (IOException e) {
             return ResponseEntity.badRequest().body(new AvatarResponse(e.getMessage()));
         }

@@ -28,14 +28,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final UserRepository userRepository;
-    private final PortfolioRepository portfolioRepository;
-    private final AvatarRepository avatarRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PortfolioService portfolioService;
+    private final AvatarService avatarService;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-
     private static final String DEFAULT_AVATAR_PATH = "D:\\Facultate\\Licenta\\trading-application-frontend\\public\\images\\NewUser.png";
-
     private static final String DEFAULT_AVATAR_NAME = "Default Avatar";
 
     public RegisterResponse register(RegisterRequest request) throws IOException {
@@ -64,12 +62,12 @@ public class AuthenticationService {
                 .build();
         Portfolio portfolio = Portfolio.builder()
                 .user(user)
-                .cashBalance(0.0)
+                .balanceAvailable(0.0)
                 .currency("usd")
                 .build();
-        avatarRepository.save(avatar);
+        avatarService.saveAvatar(avatar);
         userRepository.save(user);
-        portfolioRepository.save(portfolio);
+        portfolioService.savePortfolio(portfolio);
         return new RegisterResponse("Registered!");
     }
 
@@ -100,9 +98,9 @@ public class AuthenticationService {
         User user = getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         Avatar userAvatar = user.getAvatar();
         Portfolio userPortfolio = user.getPortfolio();
-        portfolioRepository.delete(userPortfolio);
+        portfolioService.deletePortfolio(userPortfolio);
         userRepository.delete(user);
-        avatarRepository.delete(userAvatar);
+        avatarService.deleteAvatar(userAvatar);
         return new DeleteResponse("User deleted successfully!");
     }
 }

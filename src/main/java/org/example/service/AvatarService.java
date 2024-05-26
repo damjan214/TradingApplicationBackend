@@ -14,17 +14,21 @@ import java.io.IOException;
 @Service
 @RequiredArgsConstructor
 public class AvatarService {
-
     private final AvatarRepository avatarRepository;
 
-    private final AuthenticationService authenticationService;
-
-    public AvatarResponse saveAvatar(MultipartFile file, String token) throws IOException {
-        User user = authenticationService.getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+    public AvatarResponse saveAvatar(MultipartFile file, User user) throws IOException {
         Avatar userAvatar = user.getAvatar();
         userAvatar.setName(file.getOriginalFilename());
         userAvatar.setData(file.getBytes());
         avatarRepository.save(userAvatar);
         return new AvatarResponse("Avatar saved successfully!");
+    }
+
+    public void deleteAvatar(Avatar avatar) {
+        avatarRepository.delete(avatar);
+    }
+
+    public void saveAvatar(Avatar avatar) {
+        avatarRepository.save(avatar);
     }
 }

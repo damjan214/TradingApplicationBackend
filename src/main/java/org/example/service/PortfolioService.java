@@ -14,14 +14,23 @@ public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
 
-    private final AuthenticationService authenticationService;
-
-    public PaymentDetails getCashBalance(String token) {
-        User user = authenticationService.getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+    public PaymentDetails getCashBalance(User user) {
         Portfolio userPortfolio = portfolioRepository.findByUser(user).get();
         return new PaymentDetails().builder()
-                .amount(userPortfolio.getCashBalance().longValue())
+                .amount(userPortfolio.getBalanceAvailable().longValue())
                 .currency(userPortfolio.getCurrency())
                 .build();
+    }
+
+    public void savePortfolio(Portfolio portfolio) {
+        portfolioRepository.save(portfolio);
+    }
+
+    public Portfolio getPortfolio(User user) {
+        return portfolioRepository.findByUser(user).get();
+    }
+
+    public void deletePortfolio(Portfolio userPortfolio) {
+        portfolioRepository.delete(userPortfolio);
     }
 }

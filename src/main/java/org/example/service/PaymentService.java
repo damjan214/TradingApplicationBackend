@@ -25,8 +25,7 @@ import java.util.Map;
 public class PaymentService {
     private final StripeConfig stripeConfig;
     private final PaymentRepository paymentRepository;
-    private final PortfolioRepository portfolioRepository;
-
+    private final PortfolioService portfolioService;
     private final AuthenticationService authenticationService;
 
     @PostConstruct
@@ -75,12 +74,12 @@ public class PaymentService {
             throw new PaymentNotCompletedException("Payment not completed!");
         }
         if (paymentType.equals(PaymentType.WITHDRAW)) {
-            if (user.getPortfolio().getCashBalance() < amount) {
+            if (user.getPortfolio().getBalanceAvailable() < amount) {
                 throw new InsufficientFundsException("Insufficient funds to withdraw!");
             }
             else {
                 updatePortfolio(user, amount, paymentType);
-                portfolioRepository.save(user.getPortfolio());
+                portfolioService.savePortfolio(user.getPortfolio());
                 paymentRepository.save(Payment.builder()
                         .stripePaymentId(session.getPaymentIntent())
                         .userEmail(customerEmail)
@@ -127,14 +126,14 @@ public class PaymentService {
 
     private void updatePortfolio(User user, Long amount, PaymentType paymentType) {
         if (paymentType.equals(PaymentType.WITHDRAW)) {
-            user.getPortfolio().setCashBalance(user.getPortfolio().getCashBalance() - amount);
+            user.getPortfolio().setBalanceAvailable(user.getPortfolio().getBalanceAvailable() - amount);
         } else {
-            user.getPortfolio().setCashBalance(user.getPortfolio().getCashBalance() + amount);
+            user.getPortfolio().setBalanceAvailable(user.getPortfolio().getBalanceAvailable() + amount);
         }
-        portfolioRepository.save(user.getPortfolio());
+        portfolioService.savePortfolio(user.getPortfolio());
     }
 
-    private String createSuccessUrl(String successUrl, PaymentType paymentType) {
+    public String createSuccessUrl(String successUrl, PaymentType paymentType) {
         return successUrl + "&paymentType=" + paymentType.toString();
     }
 }
