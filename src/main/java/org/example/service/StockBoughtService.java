@@ -6,6 +6,8 @@ import org.example.exceptions.ResourceNotFoundException;
 import org.example.model.Portfolio;
 import org.example.model.stocks.StockBought;
 import org.example.model.stocks.StockData;
+import org.example.model.stocks.StockPending;
+import org.example.model.stocks.StockStatus;
 import org.example.model.user.User;
 import org.example.repository.PortfolioRepository;
 import org.example.repository.StockBoughtRepository;
@@ -26,10 +28,11 @@ public class StockBoughtService {
     private final StockDataService stockDataService;
     private final ReadFileService readFileService;
     private final StockPendingService stockPendingService;
+    private String marketStatus = "CLOSED";
 
     public StockResponse buyStock(User user, StockBuyRequest stockBuyRequest) {
-        String marketStatus = stockDataService.checkMarketStatus();
-        if (Boolean.FALSE.equals(Boolean.parseBoolean(marketStatus))) {
+        String marketStatus = checkMarketStatus();
+        if (marketStatus.equals("CLOSED")) {
             stockPendingService.buyStockPending(stockBuyRequest, user);
             return new StockResponse("Stock added to pending list");
         } else {
@@ -79,8 +82,8 @@ public class StockBoughtService {
     }
 
     public StockResponse sellStock(User user, StockSellRequest stockSellRequest) {
-        String marketStatus = stockDataService.checkMarketStatus();
-        if (Boolean.FALSE.equals(Boolean.parseBoolean(marketStatus))) {
+        String marketStatus = checkMarketStatus();
+        if (marketStatus.equals("CLOSED")) {
             stockPendingService.sellStockPending(stockSellRequest, user);
             return new StockResponse("Stock added to pending list");
         } else {
@@ -100,8 +103,8 @@ public class StockBoughtService {
     }
 
     public StockResponse sellAllStocksBySymbol(User user, SellAllRequest sellAllRequest) {
-        String marketStatus = stockDataService.checkMarketStatus();
-        if (Boolean.FALSE.equals(Boolean.parseBoolean(marketStatus))) {
+        String marketStatus = checkMarketStatus();
+        if (marketStatus.equals("CLOSED")) {
             stockPendingService.sellAllStocksBySymbol(user, sellAllRequest);
             return new StockResponse("Stocks added to pending list");
         } else {
@@ -187,5 +190,52 @@ public class StockBoughtService {
             }
         }
         return stockBoughtDtos;
+    }
+    public void resolveStocksPending() {
+        List<StockPending> stockPendings = stockPendingService.findAll();
+        for (StockPending stockPending : stockPendings) {
+            User user = stockPending.getPortfolio().getUser();
+            if (stockPending.getStockStatus().equals(StockStatus.BOUGHT)) {
+                StockBuyRequest stockBuyRequest = StockBuyRequest.builder()
+                        .name(stockPending.getName())
+                        .symbol(stockPending.getSymbol())
+                        .balanceInvested(stockPending.getBalanceInvested())
+                        .build();
+                buyStockFromPending(user, stockBuyRequest);
+            }
+        }
+        for (StockPending stockPending : stockPendings) {
+            if (stockPending.getStockStatus().equals(StockStatus.SOLD)) {
+                User user = stockPending.getPortfolio().getUser();
+                StockSellRequest stockSellRequest = StockSellRequest.builder()
+                        .name(stockPending.getName())
+                        .symbol(stockPending.getSymbol())
+                        .timestamp(stockPending.getTimestamp().toString())
+                        .build();
+                sellStock(user, stockSellRequest);
+            }
+        }
+        stockPendingService.deleteAll(stockPendings);
+    }
+
+    public String checkMarketStatus() {
+        return marketStatus;
+    }
+
+    public MarketResponse checkMarketStatus(String token){
+        User user = authenticationService.getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        return new MarketResponse(marketStatus.equals("OPEN") ? "OPEN" : "CLOSED");
+    }
+
+    public MarketResponse changeMarketStatus(String token){
+        User user = authenticationService.getUserByToken(token).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        if (marketStatus.equals("OPEN")) {
+            marketStatus = "CLOSED";
+            return new MarketResponse("CLOSED");
+        } else {
+            marketStatus = "OPEN";
+            resolveStocksPending();
+            return new MarketResponse("OPEN");
+        }
     }
 }

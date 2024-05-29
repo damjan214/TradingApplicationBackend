@@ -7,7 +7,14 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.example.configuration.FinnhubConfig;
+import org.example.dto.MarketResponse;
+import org.example.dto.StockBuyRequest;
+import org.example.dto.StockSellRequest;
+import org.example.exceptions.ResourceNotFoundException;
 import org.example.model.stocks.StockData;
+import org.example.model.stocks.StockPending;
+import org.example.model.stocks.StockStatus;
+import org.example.model.user.User;
 import org.example.repository.StockDataRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,13 +33,14 @@ import java.util.logging.Logger;
 public class StockDataService {
     private static final Logger LOGGER = Logger.getLogger(StockDataService.class.getName());
     private final StockDataRepository stockDataRepository;
+    private final AuthenticationService authenticationService;
     private final FinnhubConfig finnhubConfig;
     private final String COMPANIES_FILE_PATH = "D:\\Facultate\\Licenta\\TradingApplicationBackend\\src\\main\\java\\org\\example\\file\\nasdaq_screener_1715711046717.csv";
     private final String FINNHUB_QUOTE = "https://finnhub.io/api/v1/quote?symbol=";
-    private final String FINNHUB_MARKET = "https://finnhub.io/api/v1/stock/market-status?exchange=US";
     private final String TOKEN_URL = "&token=";
+
     @Async
-    @Scheduled(initialDelay = 60000, fixedRate = 400000)
+    @Scheduled(initialDelay = 60000, fixedRate = 900000)
     public void getRealTimeDataForStocks() {
         try {
             LOGGER.info("Getting real-time data for stocks...");
@@ -45,29 +53,6 @@ public class StockDataService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public String checkMarketStatus() {
-        try {
-            URL url = new URL(FINNHUB_MARKET + TOKEN_URL + finnhubConfig.getSecretKey());
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                String marketStatus = JsonParser.parseString(response.toString()).getAsJsonObject().get("isOpen").getAsString();
-                return marketStatus;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private List<CSVRecord> readCSV(String filePath) throws IOException {

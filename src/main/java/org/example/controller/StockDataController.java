@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.dto.MarketResponse;
 import org.example.exceptions.ResourceNotFoundException;
 import org.example.model.stocks.StockData;
 import org.example.service.StockDataService;

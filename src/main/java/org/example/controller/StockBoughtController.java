@@ -73,4 +73,22 @@ public class StockBoughtController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+
+    @GetMapping("/stockdata/status")
+    public ResponseEntity<MarketResponse> getMarketStatus(@RequestHeader("Authorization") String token) {
+        try{
+            return ResponseEntity.ok(stockBoughtService.checkMarketStatus(token));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @GetMapping("/stockdata/status/change")
+    public ResponseEntity<MarketResponse> changeMarketStatus(@RequestHeader("Authorization") String token) {
+        try{
+            return ResponseEntity.ok(stockBoughtService.changeMarketStatus(token));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }
